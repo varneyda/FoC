@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TOMBSTONE 0x1
+//#define TOMBSTONE 0x1
 
 
 kv_t *kv_init(size_t capacity) {
