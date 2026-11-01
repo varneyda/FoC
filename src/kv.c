@@ -1,4 +1,10 @@
 #include <kv.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define TOMBSTONE 0x1
+
 
 kv_t *kv_init(size_t capacity) {
     if (capacity <= 0) return NULL;
@@ -14,4 +20,54 @@ kv_t *kv_init(size_t capacity) {
         return NULL;
     }
     return table;
+}
+
+
+int kv_put(kv_t *table, char *key, char *value) {
+    if (!table || !key || !value) return -1;
+
+    size_t idx = hash(key, table->capacity);
+
+    for (int i = 0; i < table->capacity; i++) {
+        size_t real_idx = (idx + i) % table->capacity;
+
+        kv_entry_t *entry = &table->entries[real_idx];
+
+        if (entry->key && entry->key != (void*)TOMBSTONE && strcmp(entry->key, key)) {
+            char *newval = strdup(value);
+            if (newval == NULL) return -1;
+            entry->value = newval;
+        }
+
+        if (!entry->key  || entry->key == (void*)TOMBSTONE) {
+            char *newval = strdup(value);
+            char *newkey = strdup(key);
+            if (newval == NULL || newkey == NULL) {
+                free(newval);
+                free(newkey);
+                return -1;
+            }
+            entry->value = newval;
+            entry->key = newkey;
+            table->count++;
+            return real_idx;
+        }
+
+        return -2;
+    }
+}
+
+
+size_t hash(char * val, int capacity) {
+    size_t hash = 0x13371337dad00000;
+
+    while (*val) {
+        hash ^= *val;
+        hash = has << 8;
+        hash += *val;
+
+        val++;
+    }
+
+    return hash % capacity;
 }
